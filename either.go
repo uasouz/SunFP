@@ -27,14 +27,13 @@ func Right(value interface{}) IEither {
 }
 
 //EITHER
-
 type either struct {
 	value   interface{}
 	isRight bool
 }
 
 type IEither interface {
-	/* Inherited from Monad: */
+	//bind<V>(fn: (val: T) => IEither<E, V>): IEither<E, V>;
 	Bind(func(interface{}) IEither) IEither
 	//flatMap<V>(fn: (val: T) => IEither<E, V>): IEither<E, V>;
 	FlatMap(func(interface{}) IEither) IEither
@@ -64,7 +63,9 @@ type IEither interface {
 	Swap() IEither
 	//
 	//bimap<Z, V>(leftFn: (err: E) => Z, rightFn: (val: T) => V): IEither<Z, V>;
+	Bimap(func(interface{}) interface{}, func(interface{}) interface{}) IEither
 	//leftMap<F>(fn: (leftVal: E) => F): IEither<F, T>;
+	LeftMap(fn func(interface{}) interface{}) IEither
 	//
 	//isRight(): boolean;
 	IsRight() bool
@@ -81,6 +82,9 @@ type IEither interface {
 	//
 	//toValidation(): Validation<E, T>;
 	//toMaybe(): IMaybe<T>;
+	ToMaybe() IMaybe
+
+	String() string
 }
 
 func (e either) Bind(fn func(interface{}) IEither) IEither {
@@ -103,6 +107,13 @@ func (e either) Map(fn func(interface{}) interface{}) IEither {
 		return Right(fn(e.value).(IEither))
 	}
 	return e
+}
+
+func (e either) Bimap(leftFn func(interface{}) interface{}, rightFn func(interface{}) interface{}) IEither {
+	if e.isRight {
+		return e.Map(rightFn)
+	}
+	return e.LeftMap(leftFn)
 }
 
 func (e either) LeftMap(fn func(interface{}) interface{}) IEither {
@@ -138,8 +149,8 @@ func (e either) Cata(leftFn func(interface{}) interface{}, rightFn func(interfac
 	return rightFn(e.value)
 }
 
-func (e either) Fold(leftFn func(interface{}) interface{},rightFn func(interface{}) interface{}) interface{} {
-	return e.Cata(leftFn,rightFn)
+func (e either) Fold(leftFn func(interface{}) interface{}, rightFn func(interface{}) interface{}) interface{} {
+	return e.Cata(leftFn, rightFn)
 }
 
 //Review
@@ -185,4 +196,22 @@ func (e either) ForEach(fn func(interface{}) interface{}) {
 
 func (e either) ForEachLeft(fn func(interface{}) interface{}) {
 	e.Cata(fn, noop)
+}
+
+func (e either) ToMaybe() IMaybe {
+	if e.isRight {
+		return Some(e.value)
+	}
+	return Nothing()
+}
+
+func (e either) String() string {
+	if s, ok := e.Cata(func(left interface{}) interface{} {
+		return left
+	}, func(right interface{}) interface{} {
+		return right
+	}).(string); ok {
+		return s
+	}
+	return ""
 }
