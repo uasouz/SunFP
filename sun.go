@@ -1,13 +1,19 @@
 package sunfp
 
-var noop = func(interface{}) interface{} {}
+//Does nothing
+func Noop(){
+
+}
+
+//Does nothing into a fancy way
+func noop(interface{}) interface{} { return "" }
+
 
 type Functor interface {
 	Map(fn func(interface{}) interface{}) interface{}
 }
 
 type Chain interface {
-
 }
 
 type Bind interface {
@@ -40,7 +46,7 @@ type IFree interface {
 	//go<FFA>(extract: (sus: FFA) => Free<A>): A;
 }
 
-func foldRight(fn func(), list []interface{}, acc interface{})  {
+func foldRight(fn func(), list []interface{}, acc interface{}) {
 	//return func (innerList []interface{}, innerAcc interface{}) {
 	panic("implement me")
 	//}(list,acc)
